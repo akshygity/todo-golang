@@ -1,30 +1,27 @@
-
-name: Generate SBOM
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+name: Build SBOM and send to api.
+on: push
 jobs:
-  generate-sbom:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [14]
+    name: Node ${{ matrix.node }} sample
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Install syft
-        run: |
-          LATEST_SYFT_VERSION=$(curl -s https://api.github.com/repos/anchore/syft/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin "$LATEST_SYFT_VERSION"
-          syft version
-      - name: Generate SBOM
-        run: syft alpine:latest -o cyclonedx-json >sbom.json 
-
+      - uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - name: Create SBOM with CycloneDX
+        id: sbom
+        uses: CycloneDX/gh-node-module-generatebom@master 
+        with:
+            output: './test.app.bom.json'
       - name: Save Sbom to new file 
         run: |    
-           echo -n "$(cat './sbom.json')" | jq '. + {"name": "${{github.actor}}"}' | jq '. + {"repo": "${{github.repositoryUrl}}"}' > sbom_file.json 
+           echo -n "$(cat './test.app.bom.json')" | jq '. + {"name": "${{github.actor}}"}' | jq '. + {"repo": "${{github.repositoryUrl}}"}' > sbom_file.json 
       - name: Call Api
         run: |  
           curl -k --request POST 'https://dt.cryptosoft.com:9443/api/v1/guest/sbom-github' \
