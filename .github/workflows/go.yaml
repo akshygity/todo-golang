@@ -1,4 +1,4 @@
-name: Build SBOM and send to api-syft.
+name: Build SBOM and send to a
 on: push
 jobs:
   build:
