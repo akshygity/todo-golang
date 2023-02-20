@@ -1,4 +1,4 @@
-name: Build SBOM and send
+name: Build SBOM and se
 on: push
 jobs:
   build:
