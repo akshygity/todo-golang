@@ -2,8 +2,7 @@ name: Build SBOM and se
 on: push
 jobs:
   build:
-    runs-on: ubuntu-latest
-   
+    runs-on: ubuntu-latest 
     steps:
       - uses: actions/checkout@v2    
       - name: Install syft
@@ -13,8 +12,6 @@ jobs:
           syft version
       - name: Generate SBOM
         run: syft ./ -o cyclonedx-json >sbom.json
- 
-
       - name: Save Sbom to new file 
         run: |    
            echo -n "$(cat './sbom.json')" | jq '. + {"name": "${{github.actor}}"}' | jq '. + {"repo": "${{github.repositoryUrl}}"}' > sbom_file.json 
